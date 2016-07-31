@@ -8,4 +8,4 @@ To run locally, clone the repo and `npm install`, then `npm run dev` and visit [
 
 ## License
 
-See `LICENSE.md`
+See `LICENSE`

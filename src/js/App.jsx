@@ -164,23 +164,7 @@ export default class App extends Component {
 			let { user } = this.state;
 			return (
 				<div>
-					<h1>Logged in as {user.display_name}</h1>
-					<div className="media">
-						<div className="pull-left">
-							<img className="media-object" width="150" src={user.images[0].url} />
-						</div>
-						<div className="media-body">
-							<dl className="dl-horizontal">
-								<dt>Display name</dt><dd className="clearfix">{user.display_name}</dd>
-								<dt>Id</dt><dd>{user.id}</dd>
-								<dt>Email</dt><dd>{user.email}</dd>
-								<dt>Spotify URI</dt><dd><a href={user.external_urls.spotify}>{user.external_urls.spotify}</a></dd>
-								<dt>Link</dt><dd><a href={user.href}>{user.href}</a></dd>
-								<dt>Profile Image</dt><dd className="clearfix"><a href={user.images[0].url}>{user.images[0].url}</a></dd>
-								<dt>Country</dt><dd>{user.country}</dd>
-							</dl>
-						</div>
-					</div>
+					<h1>Hey, <img width="50" className="profile-picture" src={user.images[0].url} /> {user.display_name}</h1>
 				</div>
 			);
 		}
@@ -209,8 +193,8 @@ export default class App extends Component {
 				return (
 					<div>
 						<h4>Your playlists:</h4>
-						<button onClick={() => this.toggleSelectedPlaylists(true)}>Select All</button>
-						<button onClick={() => this.toggleSelectedPlaylists(false)}>Select None</button>
+						<button className="btn btn-default" onClick={() => this.toggleSelectedPlaylists(true)}>Select All</button>
+						<button className="btn btn-default" onClick={() => this.toggleSelectedPlaylists(false)}>Select None</button>
 						{
 							this.state.playlists.items.map( (playlist, index) => {
 								return (
@@ -257,19 +241,37 @@ export default class App extends Component {
 					<input type="checkbox" checked={playlist.byebyespotify_should_export} onChange={ (event) => { this.togglePlaylistExport(event, index) } } />
 					{playlist.name}
 					{
-						playlist.collaborative && <abbr title="Collaborative">C</abbr>
+						playlist.collaborative && <abbr title="Collaborative" className="playlist-modifier label label-info">C</abbr>
 					}
 					{
-						playlist.owner.id !== this.state.user.id && <abbr title="Not owned by you!">N</abbr>
+						playlist.owner.id !== this.state.user.id && <abbr title="Not owned by you!" className="playlist-modifier label label-info">N</abbr>
 					}
 				</h5>
 			</div>
 		);
 	}
 
-	render() {
+	renderMeatAndPotatoes() {
 
 		let playlistsToExport = this.getCurrentSelectedPlaylists();
+		let totalPlaylists = this.state.playlists && 'items' in this.state.playlists ? this.state.playlists.items.length : 0;
+
+		if(this.state.user) {
+			return (
+				<div className="row meat-and-potatoes">
+					<div className="col-xs-12 col-md-4 col-md-offset-2 playlists">
+						{ this.renderUserPlaylists() }
+					</div>
+					<div className="col-xs-12 col-md-4 controls">
+						<h3>Exporting { playlistsToExport.length } / { totalPlaylists } playlists</h3>
+						<button onClick={this.exportSelectedPlaylists} className="btn btn-block btn-primary">Export to CSV</button>
+					</div>
+				</div>
+			);
+		}
+	}
+
+	render() {
 
 		return (
 			<div className="container-fluid">
@@ -278,20 +280,16 @@ export default class App extends Component {
 						<div className="text-center">
 							<h1>Bye Bye, Spotify</h1>
 							<h2>Saying goodbye to Spotify? Take your playlists with you!</h2>
-							<button onClick={this.spotifyAuth} className="btn btn-primary spotify-button">Log in with Spotify</button>
+							{
+								!this.state.user && <button onClick={this.spotifyAuth} className="btn btn-primary spotify-button">Log in with Spotify</button>
+							}
+							{
+								this.state.user && this.renderUserProfile()
+							}
 						</div>
-					{ /*this.renderUserProfile()*/ }
 					</div>
 				</div>
-				<div className="row meat-and-potatoes">
-					<div className="col-xs-12 col-md-4 col-md-offset-2 playlists">
-						{ this.renderUserPlaylists() }
-					</div>
-					<div className="col-xs-12 col-md-4 controls">
-						<h3>Exporting { playlistsToExport.length } playlists</h3>
-						<button onClick={this.exportSelectedPlaylists} className="btn btn-block">Export to CSV</button>
-					</div>
-				</div>
+				{ this.renderMeatAndPotatoes() }
 			</div>
 		);
 
