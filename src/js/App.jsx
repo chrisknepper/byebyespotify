@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import axios, * as $ from 'axios';
+import * as $ from 'axios';
 
 const stateKey = 'spotify_auth_state';
 
@@ -68,7 +68,7 @@ export default class App extends Component {
 		let csv = '';
 		if(trackList.items.length) {
 			trackList.items.forEach( (item, index) => {
-				csv += this.sanitizeCommas(item.track.name)  + ',' + this.sanitizeCommas(item.track.artists[0].name) + ',' + this.sanitizeCommas(item.track.album.name);
+				csv += this.sanitizeFieldForCSV(item.track.name)  + ',' + this.sanitizeFieldForCSV(item.track.artists[0].name) + ',' + this.sanitizeFieldForCSV(item.track.album.name);
 				if(index < trackList.items.length) {
 					csv += '\r\n';
 				}
@@ -77,11 +77,15 @@ export default class App extends Component {
 		return csv;
 	}
 
-	// TODO: Deal with double quotes
-	// http://stackoverflow.com/questions/769621/dealing-with-commas-in-a-csv-file
-	sanitizeCommas(string) {
+	// Takes a string and returns a string suitable for use in the CSV file,
+	// adding quotes if the string contains a comma and escaping quotes if quotes were added.
+	// See: http://stackoverflow.com/questions/769621/dealing-with-commas-in-a-csv-file
+	sanitizeFieldForCSV(string) {
 		if(string.includes(',')) {
-			return '"' + string + '"';
+			if(!string.includes('"')) {
+				return '"' + string + '"';
+			}
+			return '"' + string.replace(/"/g, '\"') + '"';
 		}
 		return string;
 	}
