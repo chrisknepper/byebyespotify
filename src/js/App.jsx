@@ -64,11 +64,12 @@ export default class App extends Component {
 
 	}
 
-	makeTrackCSVFromPlaylist(trackList) {
+	makeTrackCSVFromPlaylist(trackList, playlistName) {
+		console.log('we got a tracklist here bobo');
 		let csv = '';
 		if(trackList.items.length) {
 			trackList.items.forEach( (item, index) => {
-				csv += this.sanitizeFieldForCSV(item.track.name)  + ',' + this.sanitizeFieldForCSV(item.track.artists[0].name) + ',' + this.sanitizeFieldForCSV(item.track.album.name);
+				csv += this.sanitizeFieldForCSV(item.track.name)  + ',' + this.sanitizeFieldForCSV(item.track.artists[0].name) + ',' + this.sanitizeFieldForCSV(item.track.album.name) + ',' + this.sanitizeFieldForCSV(playlistName);
 				if(index < trackList.items.length) {
 					csv += '\r\n';
 				}
@@ -99,7 +100,7 @@ export default class App extends Component {
 			.then((response) => {
 				console.log('got playlist data', response);
 				if('data' in response && response.data.tracks.items.length) {
-					let csvFile = 'data:text/csv;charset=utf-8,' + this.makeTrackCSVFromPlaylist(response.data.tracks);
+					let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album,playlist\r\n' + this.makeTrackCSVFromPlaylist(response.data.tracks, response.data.name);
 					console.log('csv contents', csvFile);
 					let encodedFile = encodeURI(csvFile);
 					let link = document.createElement('a');
