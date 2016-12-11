@@ -91,26 +91,12 @@ export default class App extends Component {
 		return string;
 	}
 
-	getPlaylistDetailsAndTriggerDownload(playlist) {
-			$.get(playlist.href, {
-				headers: {
-				'Authorization': 'Bearer ' + this.state.access_token
-				}
-			})
-			.then((response) => {
-				console.log('got playlist data', response);
-				if('data' in response && response.data.tracks.items.length) {
-					let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album,playlist\r\n' + this.makeTrackCSVFromPlaylist(response.data.tracks, response.data.name);
-					console.log('csv contents', csvFile);
-					let encodedFile = encodeURI(csvFile);
-					let link = document.createElement('a');
-					link.setAttribute('href', encodedFile);
-					link.setAttribute('download', playlist.name + '.csv');
-					document.body.appendChild(link);
-					link.click();
-					document.body.removeChild(link);
-				}
-			})
+	getPlaylistDetails(playlist) {
+		return $.get(playlist.href, {
+			headers: {
+			'Authorization': 'Bearer ' + this.state.access_token
+			}
+		});
 	}
 
 	spotifyAuth() {
@@ -177,8 +163,23 @@ export default class App extends Component {
 
 	exportSelectedPlaylists() {
 		let playlistsToExport = this.getCurrentSelectedPlaylists();
+
 		playlistsToExport.forEach((playlist) => {
-			this.getPlaylistDetailsAndTriggerDownload(playlist);
+			this.getPlaylistDetails(playlist)
+			.then((response) => {
+				console.log('got playlist data', response);
+				if('data' in response && response.data.tracks.items.length) {
+					let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album,playlist\r\n' + this.makeTrackCSVFromPlaylist(response.data.tracks, response.data.name);
+					console.log('csv contents', csvFile);
+					let encodedFile = encodeURI(csvFile);
+					let link = document.createElement('a');
+					link.setAttribute('href', encodedFile);
+					link.setAttribute('download', playlist.name + '.csv');
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+				}
+			})
 		});
 	}
 
