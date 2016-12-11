@@ -10,11 +10,13 @@ export default class App extends Component {
 		this.state = {
 			user: null,
 			playlists: null,
-			access_token: null
+			access_token: null,
+			multiFileExport: false
 		}
 		this.spotifyAuth = this.spotifyAuth.bind(this);
 		this.exportSelectedPlaylists = this.exportSelectedPlaylists.bind(this);
 		this.toggleSelectedPlaylists = this.toggleSelectedPlaylists.bind(this);
+		this.toggleMultiFileExportMode = this.toggleMultiFileExportMode.bind(this);
 	}
 
 	componentDidMount() {
@@ -182,6 +184,7 @@ export default class App extends Component {
 	}
 
 	exportSelectedPlaylists() {
+		console.log('beginning playlist export, multi-file mode is', this.state.multiFileExport);
 		let playlistsToExport = this.getCurrentSelectedPlaylists();
 		this.downloadPlaylists(playlistsToExport);
 	}
@@ -234,6 +237,10 @@ export default class App extends Component {
 		})
 	}
 
+	toggleMultiFileExportMode(event) {
+		this.setState({multiFileExport: !this.state.multiFileExport});
+	}
+
 	getCurrentSelectedPlaylists() {
 		if(this.state.playlists && 'items' in this.state.playlists) {
 			return this.state.playlists.items.filter( (playlist) => {
@@ -272,7 +279,16 @@ export default class App extends Component {
 						{ this.renderUserPlaylists() }
 					</div>
 					<div className="col-xs-12 col-md-4 controls">
-						<h3>Exporting { playlistsToExport.length } / { totalPlaylists } playlists</h3>
+						<h3>{ playlistsToExport.length } / { totalPlaylists } playlists selected for export</h3>
+						<h4>Export mode</h4>
+						<label>
+							<input type="radio" name="export-mode" value="0" checked={(!this.state.multiFileExport)} onChange={this.toggleMultiFileExportMode} />
+							Single file containing all playlists (for export to Google Play Music)
+						</label>
+						<label>
+							<input type="radio" name="export-mode" value="1" checked={(this.state.multiFileExport)} onChange={this.toggleMultiFileExportMode} />
+							One file per playlist
+						</label>
 						<button onClick={this.exportSelectedPlaylists} className="btn btn-block btn-primary">Export to CSV</button>
 					</div>
 				</div>
