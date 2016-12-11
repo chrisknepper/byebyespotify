@@ -161,10 +161,8 @@ export default class App extends Component {
 		}
 	}
 
-	exportSelectedPlaylists() {
-		let playlistsToExport = this.getCurrentSelectedPlaylists();
-
-		playlistsToExport.forEach((playlist) => {
+	downloadPlaylists(playlists) {
+		playlists.forEach((playlist) => {
 			this.getPlaylistDetails(playlist)
 			.then((response) => {
 				console.log('got playlist data', response);
@@ -181,6 +179,11 @@ export default class App extends Component {
 				}
 			})
 		});
+	}
+
+	exportSelectedPlaylists() {
+		let playlistsToExport = this.getCurrentSelectedPlaylists();
+		this.downloadPlaylists(playlistsToExport);
 	}
 
 	toggleSelectedPlaylists(on) {
