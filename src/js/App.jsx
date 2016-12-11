@@ -71,7 +71,10 @@ export default class App extends Component {
 		let csv = '';
 		if(trackList.items.length) {
 			trackList.items.forEach( (item, index) => {
-				csv += this.sanitizeFieldForCSV(item.track.name)  + ',' + this.sanitizeFieldForCSV(item.track.artists[0].name) + ',' + this.sanitizeFieldForCSV(item.track.album.name) + ',' + this.sanitizeFieldForCSV(playlistName);
+				csv += this.sanitizeFieldForCSV(item.track.name)  + ',' + this.sanitizeFieldForCSV(item.track.artists[0].name) + ',' + this.sanitizeFieldForCSV(item.track.album.name);
+				if(this.state.multiFileExport) {
+					csv += ',' + this.sanitizeFieldForCSV(playlistName);
+				}
 				if(index < trackList.items.length) {
 					csv += '\r\n';
 				}
@@ -169,9 +172,20 @@ export default class App extends Component {
 			.then((response) => {
 				console.log('got playlist data', response);
 				if('data' in response && response.data.tracks.items.length) {
-					let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album,playlist\r\n' + this.makeTrackCSVFromPlaylist(response.data.tracks, response.data.name);
-					console.log('csv contents', csvFile);
-					this.triggerPlaylistDownload(playlist, csvFile);
+					if(this.state.multiFileExport) {
+						let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album\r\n' + this.makeTrackCSVFromPlaylist(response.data.tracks, response.data.name);
+						console.log('csv contents', csvFile);
+						this.triggerPlaylistDownload(playlist, csvFile);
+					}
+					else {
+						console.warn('NOT IMPLEMENTED YET!');
+						// TODO: Use Promise.all or otherwise get all selected playlists'
+						// information before hitting the conditional, which will make
+						// allowing both modes much easier to understand programmatically
+						// let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album,playlist\r\n' + this.makeTrackCSVFromPlaylist(response.data.tracks, response.data.name);
+						// console.log('csv contents', csvFile);
+						// this.triggerPlaylistDownload(playlist, csvFile);
+					}
 				}
 			})
 		});
