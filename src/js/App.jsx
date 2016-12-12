@@ -72,7 +72,7 @@ export default class App extends Component {
 		if(trackList.items.length) {
 			trackList.items.forEach( (item, index) => {
 				csv += this.sanitizeFieldForCSV(item.track.name)  + ',' + this.sanitizeFieldForCSV(item.track.artists[0].name) + ',' + this.sanitizeFieldForCSV(item.track.album.name);
-				if(this.state.multiFileExport) {
+				if(!this.state.multiFileExport) {
 					csv += ',' + this.sanitizeFieldForCSV(playlistName);
 				}
 				if(index < trackList.items.length) {
@@ -101,7 +101,12 @@ export default class App extends Component {
 			headers: {
 			'Authorization': 'Bearer ' + this.state.access_token
 			}
-		});
+		})
+		.then((response) => {
+			if('data' in response && response.data.tracks.items.length) {
+				playlist.trackList = response.data.tracks;
+			}
+		})
 	}
 
 	spotifyAuth() {
@@ -167,35 +172,39 @@ export default class App extends Component {
 	}
 
 	downloadPlaylists(playlists) {
-		playlists.forEach((playlist) => {
-			this.getPlaylistDetails(playlist)
-			.then((response) => {
-				console.log('got playlist data', response);
-				if('data' in response && response.data.tracks.items.length) {
-					if(this.state.multiFileExport) {
-						let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album\r\n' + this.makeTrackCSVFromPlaylist(response.data.tracks, response.data.name);
+		console.log('gonna downloadPlaylists', playlists);
+		if(Array.isArray(playlists) && playlists.length) {
+			const promiseArray = Array.from(playlists, (playlist) => {
+				return this.getPlaylistDetails(playlist);
+			});
+
+			Promise.all(promiseArray)
+			.then(() => {
+				console.log('got the tracks for all selected playlists, time to assemble CSVs');
+
+				if(this.state.multiFileExport) {
+					playlists.forEach((playlist) => {
+						let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album\r\n' + this.makeTrackCSVFromPlaylist(playlist.trackList, playlist.name);
 						console.log('csv contents', csvFile);
-						this.triggerPlaylistDownload(playlist, csvFile);
-					}
-					else {
-						console.warn('NOT IMPLEMENTED YET!');
-						// TODO: Use Promise.all or otherwise get all selected playlists'
-						// information before hitting the conditional, which will make
-						// allowing both modes much easier to understand programmatically
-						// let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album,playlist\r\n' + this.makeTrackCSVFromPlaylist(response.data.tracks, response.data.name);
-						// console.log('csv contents', csvFile);
-						// this.triggerPlaylistDownload(playlist, csvFile);
-					}
+						this.triggerPlaylistDownload(playlist.name, csvFile);
+					});
 				}
-			})
-		});
+				else {
+					let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album,playlist\r\n';
+					playlists.forEach((playlist) => {
+						csvFile += this.makeTrackCSVFromPlaylist(playlist.trackList, playlist.name);
+					});
+					this.triggerPlaylistDownload('multi-file-playlist', csvFile);
+				}
+			});
+		}
 	}
 
-	triggerPlaylistDownload(playlist, csvFile) {
+	triggerPlaylistDownload(fileName, csvFile) {
 		let encodedFile = encodeURI(csvFile);
 		let link = document.createElement('a');
 		link.setAttribute('href', encodedFile);
-		link.setAttribute('download', playlist.name + '.csv');
+		link.setAttribute('download', fileName + '.csv');
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
