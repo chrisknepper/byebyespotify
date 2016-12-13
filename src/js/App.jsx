@@ -96,15 +96,40 @@ export default class App extends Component {
 		return string;
 	}
 
+	// Spotify's API limits the number of songs returned by most calls to 100
+	// For playlists of greater than 100 songs, this function is recursive (
+	// it calls itself) until every song in the playlist is known
 	getPlaylistDetails(playlist) {
+
 		return $.get(playlist.href, {
 			headers: {
 			'Authorization': 'Bearer ' + this.state.access_token
 			}
 		})
 		.then((response) => {
-			if('data' in response && response.data.tracks.items.length) {
-				playlist.trackList = response.data.tracks;
+
+			let nextURL = null;
+			if('data' in response) {
+				if('items' in response.data) {
+					// this data structure means we're in a recursive page response
+					playlist.trackList.items = [].concat(playlist.trackList.items, response.data.items);
+
+					if(response.data.next) {
+						nextURL = response.data.next;
+					}
+				}
+				else if('tracks' in response.data) {
+					// this data structure means we're in the first page response
+					playlist.trackList = response.data.tracks;
+
+					if(response.data.tracks.next) {
+						nextURL = response.data.tracks.next;
+					}
+				}
+				if(nextURL) {
+					playlist.href = nextURL;
+					return this.getPlaylistDetails(playlist); // have another go if there are more tracks we haven't added yet
+				}
 			}
 		})
 	}
