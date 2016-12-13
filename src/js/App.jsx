@@ -67,7 +67,7 @@ export default class App extends Component {
 	}
 
 	makeTrackCSVFromPlaylist(trackList, playlistName) {
-		console.log('we got a tracklist here bobo');
+		//console.log('we got a tracklist here bobo');
 		let csv = '';
 		if(trackList.items.length) {
 			trackList.items.forEach( (item, index) => {
@@ -161,7 +161,7 @@ export default class App extends Component {
 
 	renderUserProfile() {
 		if(this.state.user) {
-			console.log('sherpin a derp', this.state);
+			//console.log('sherpin a derp', this.state);
 			let { user } = this.state;
 			return (
 				<div>
@@ -190,11 +190,12 @@ export default class App extends Component {
 					});
 				}
 				else {
+					const formattedDate = new Date().toLocaleString(false,{ year: 'numeric', month: 'long', day: 'numeric' }).replace(',', '').replace(/ /g, '-');
 					let csvFile = 'data:text/csv;charset=utf-8,' + 'title,artist,album,playlist\r\n';
 					playlists.forEach((playlist) => {
 						csvFile += this.makeTrackCSVFromPlaylist(playlist.trackList, playlist.name);
 					});
-					this.triggerPlaylistDownload('multi-file-playlist', csvFile);
+					this.triggerPlaylistDownload(this.state.user.uri + '_playlists_exported_' + formattedDate, csvFile);
 				}
 			});
 		}
